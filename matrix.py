@@ -1,3 +1,6 @@
+import vector
+
+
 class Matrix:
 
     @staticmethod
@@ -12,6 +15,20 @@ class Matrix:
         self.cols = cols
         self.contents = [[0 for c in range(cols)] for r in range(rows)]
 
+    def __str__(self):
+        result = "["
+        for r in range(self.rows):
+            result += self.contents[r].__str__()
+            if r < self.rows - 1:
+                result += ",\n"
+        result += "]"
+        return result
+
+    def clone(self):
+        result = Matrix(self.rows, self.cols)
+        result.contents = [[self.contents[r][c] for c in range(self.cols)] for r in range(self.rows)]
+        return result
+
     def row(self, r):
         return self.contents[r]
 
@@ -22,11 +39,17 @@ class Matrix:
         return [self.contents[r][c] for r in range(self.rows)]
 
     def set_col(self, c, new_col):
+        if self.rows != len(new_col):
+            raise ValueError("New column incompatible size.")
+
         for r in range(self.rows):
             self.contents[r][c] = new_col[r]
 
     def set(self, r, c, v):
         self.contents[r][c] = v
+
+    def get(self, r, c):
+        return self.contents[r][c]
 
     def transpose(self):
         result = Matrix(self.rows, self.cols)
@@ -72,8 +95,16 @@ class Matrix:
 
     def adjust_cols(self, new_cols):
         result = Matrix(self.rows, new_cols)
-        result.contents = [[self.contents[r][c] for c in range(self.cols)] for r in range(self.rows)]
+        for r in range(self.rows):
+            for c in range(self.cols):
+                if c < self.cols:
+                    result.contents[r][c] = self.contents[r][c]
         return result
+
+    def exchange(self, r1, r2):
+        temp = self.contents[r2]
+        self.contents[r2] = self.contents[r1]
+        self.contents[r1] = temp
 
     def augment(self, other):
         if self.rows != other.rows:
@@ -81,15 +112,85 @@ class Matrix:
 
         aug = self.adjust_cols(self.cols + other.cols)
         for c in range(other.cols):
-            aug.set_col(self.cols() + c, other.col(c))
+            aug.set_col(self.cols + c, other.col(c))
         return aug
 
     def reduce(self, other):
-        #aug = self.augment(other)
-        pass
+        if isinstance(other, vector.Vector):
+            other = other.to_matrix()
 
-    def back_sub(self, reduced):
-        pass
+        aug = self.augment(other)
+
+        pr = 0
+        for c in range(self.cols):
+            pivot = aug.get(pr, c) if pr < aug.rows else 0
+            if pivot == 0:
+                for r in range(c, aug.rows):
+                    pivot = aug.get(r, c)
+                    if pivot != 0:
+                        aug.exchange(c, r)
+                        break
+
+            if pivot != 0:
+                if pivot != 1:
+                    for k in range(aug.cols):
+                        aug.set(pr, k, (aug.get(pr, k) / pivot))
+                    pivot = 1
+
+            for r in range((pr + 1), aug.rows):
+                ratio = aug.get(r, c)
+                for k in range(aug.cols):
+                    val = aug.get(r, k) - ratio * aug.contents[pr][k]
+                    aug.set(r, k, val)
+
+            for r in range((pr + 1), aug.rows):
+                all_zeroes = True
+                for k in range(aug.cols):
+                    if aug.get(r, k) != 0:
+                        all_zeroes = False
+                        break
+
+                if all_zeroes and r != aug.rows - 1:
+                    for o in range(r + 1, aug.rows):
+                        sub_all_zeroes = True
+                        for k in range(aug.cols):
+                            if aug.get(o, k) != 0:
+                                sub_all_zeroes = False
+                                break
+                        if not sub_all_zeroes:
+                            aug.exchange(r, o)
+                            break
+
+            pr += 1
+            print(aug)
+
+        return aug, pr
+
+    def back_sub(self):
+        aug = self.clone()
+
+        for pr in range(aug.rows - 1, -1, -1):
+            pivot = 0
+            c = 0
+            for k in range(aug.cols):
+                if aug.get(pr, k) != 0:
+                    pivot = aug.get(pr, k)
+                    c = k
+                    break
+
+            if pivot != 0:
+                for r in range(pr - 1, -1, -1):
+                    ratio = aug.get(r, c)
+                    if pivot != 1:
+                        ratio /= pivot
+
+                    for k in range(aug.cols):
+                        val = aug.get(r, k) - ratio * aug.get(pr, k)
+                        aug.set(r, k, val)
+
+            print(aug)
+
+        return aug
 
     def __mul__(self, other):
         if self.cols != other.rows:

@@ -1,8 +1,9 @@
 from matrix import Matrix
+from vector import Vector
 
 
 def main():
-    a = Matrix(2, 3)
+    '''a = Matrix(2, 3)
     a.set_row(0, [1, 2, 3])
     a.set_row(1, [3, 2, 1])
     print("a: ", a.contents)
@@ -26,7 +27,19 @@ def main():
     print("i: ", i.contents)
     print("symmetric: ", i.symmetric())
     print("upper triangular: ", i.upper_triangular())
-    print("lower triangular: ", i.lower_triangular())
+    print("lower triangular: ", i.lower_triangular())'''
+
+    sys = Matrix(3, 3)
+    sys.set_row(0, [2, 1, -1])
+    sys.set_row(1, [-3, -1, 2])
+    sys.set_row(2, [-2, 1, 2])
+
+    out = Vector(size=3, contents=[8, -11, -3])
+    eliminated, pivots = sys.reduce(out)
+    print(eliminated)
+
+    back_subbed = eliminated.back_sub()
+    print(back_subbed)
 
 
 if __name__ == '__main__':

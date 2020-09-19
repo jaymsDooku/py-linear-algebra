@@ -1,11 +1,12 @@
 import math
+import matrix
 
 
 class Vector:
 
-    def __init__(self, size):
-        self.size = size
-        self.contents = [0 for i in range(size)]
+    def __init__(self, *args, **kwargs):
+        self.size = kwargs.get('size')
+        self.contents = kwargs.get('contents', [0 for i in range(self.size)])
 
     def __getitem__(self, item):
         return self.contents[item]
@@ -56,3 +57,8 @@ class Vector:
         length = self.length()
         norm.contents = [(self.contents[i] / length) for i in range(self.size)]
         return norm
+
+    def to_matrix(self):
+        result = matrix.Matrix(self.size, 1)
+        result.set_col(0, self.contents)
+        return result
