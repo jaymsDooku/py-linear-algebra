@@ -121,6 +121,12 @@ class Matrix:
 
         aug = self.augment(other)
 
+        def all_zeroes(row):
+            for col in range(aug.cols):
+                if aug.get(row, col) != 0:
+                    return False
+            return True
+
         pr = 0
         for c in range(self.cols):
             pivot = aug.get(pr, c) if pr < aug.rows else 0
@@ -144,20 +150,9 @@ class Matrix:
                     aug.set(r, k, val)
 
             for r in range((pr + 1), aug.rows):
-                all_zeroes = True
-                for k in range(aug.cols):
-                    if aug.get(r, k) != 0:
-                        all_zeroes = False
-                        break
-
-                if all_zeroes and r != aug.rows - 1:
+                if all_zeroes(r) and r != aug.rows - 1:
                     for o in range(r + 1, aug.rows):
-                        sub_all_zeroes = True
-                        for k in range(aug.cols):
-                            if aug.get(o, k) != 0:
-                                sub_all_zeroes = False
-                                break
-                        if not sub_all_zeroes:
+                        if not all_zeroes(o):
                             aug.exchange(r, o)
                             break
 
